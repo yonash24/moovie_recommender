@@ -1,9 +1,11 @@
+from typing import Dict
 import pandas as pd 
 import numpy as np
 import matplotlib as plt
 import os
 from sklearn.preprocessing import MinMaxScaler
 from kaggle.api.kaggle_api_extended import KaggleApi
+from sklearn.preprocessing import StandardScaler
 
 #class that dealing with importing the datasets
 class ImportData:
@@ -98,3 +100,39 @@ class DataCleaning:
             new_data_dict[file_name] = df
             
         return new_data_dict
+    
+    #scaling the data. standartizayion
+    @staticmethod
+    def standart_data(data_dict:dict):
+        scalered_dict = {}
+        for file_name, df in data_dict.items():
+            df_copy = df.copy()
+            scaler = StandardScaler()
+            scaled_data_arr = scaler.fit_transform(df_copy)
+            scaled_df = pd.DataFrame(scaled_data_arr, columns = df_copy.columns)
+            scalered_dict[file_name] = scaled_df
+        
+        return scalered_dict
+            
+            
+    
+    #class that handel aggregation
+    #create aggregation functions for tha data
+    class aggregation:
+        
+        #show for each user how much movies he rated
+        @staticmethod
+        def user_rating_amount(data_dict:dict):
+            rating_df = data_dict["ratings.csv"]
+            user_rating = rating_df["userId"].values_counts()  
+            return user_rating
+        
+        #average rating per user
+        @staticmethod
+        def mean_user_rating(data_dict:Dict[str, pd.DataFrame]):
+            rating_df = data_dict["ratings.csv"]
+            user_avg_rating = rating_df.groupby("userId")["rating"].mean()
+            return user_avg_rating
+        
+        
+        
