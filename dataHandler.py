@@ -101,7 +101,7 @@ class DataCleaning:
             
         return new_data_dict
     
-    #scaling the data. standartizayion
+    #scaling the data. standartization
     @staticmethod
     def standart_data(data_dict:dict):
         scalered_dict = {}
@@ -126,7 +126,7 @@ class DataCleaning:
                     elif pd.api.types.is_object_dtype(df[col]):
                         df[col] = pd.to_datetime(df[col],errors="coerce")
         
-        return data_dict
+        return data_dict    
             
     
     #class that handel aggregation
@@ -196,5 +196,105 @@ class DataCleaning:
             return movie_std_df
         
         
+        #the overall number if movie ratings to his popularity
+        @staticmethod
+        def movie_pop(data_dict:Dict[str,pd.DataFrame]):
+            df = data_dict["rating.csv"]
+            popularity_df = df.value_counts("movieId")
+            return popularity_df
+        
+        #the number of tags per movie. show the complexity of the plot
+        @staticmethod
+        def tags_per_movie(data_dict:Dict[str,pd.DataFrame]):
+            df = data_dict["tags.csv"]
+            movie_tags = df.value_counts("movieId")
+            return movie_tags
+        
+            
+        """
+        genre aggregation
+        """
+        
+        #average rating per genre
+        @staticmethod
+        def genre_avg_rating(data_dict:Dict[str,pd.DataFrame]):
+            combined_data = pd.merge(data_dict["ratings.csv"],data_dict["movies.csv"],on="movieId")
+            combined_data["genres"] = combined_data["genres"].str.split('|')
+            explosed_df = combined_data.explode("genres")
+            genre_avg_rating = explosed_df.groupby("genres")["rating"].mean()
+            return genre_avg_rating
+            
+        
+        #return the amount of moovies in genre
+        @staticmethod
+        def amount_in_genre(data_dict:Dict[str,pd.DataFrame]):
+            df = data_dict["movies.csv"]
+            split_df = df["genres"].str.split("|")
+            explode_df = split_df.explode("genres")
+            count_genres = explode_df["genres"].count_values()
+            return count_genres
+            
+            
+        #return the most polaraiz genre
+        #its mean it return the genre with the highest dtandart deviation
+        @staticmethod
+        def most_polaraiz_genre(data_dict:Dict[str,pd.DataFrame]):
+            combined_data = pd.merge(data_dict["ratings.csv"],data_dict["movies.csv"],on="movieId")
+            combined_data["genres"] = combined_data["genres"].str.split("|")
+            explode_df = combined_data.explode("genres")
+            genre_polaraiz = explode_df.groupby("genres")["ratings"].std()
+            most_polaraiz = genre_polaraiz.idxmax()
+            return most_polaraiz
+            
+        
+        #get the precentage of genre from all the moovies genres
+        @staticmethod
+        def genre_relative(data_dict:Dict[str,pd.DataFrame]):
+            df = data_dict["movies.csv"]
+            df["genres"] = df["genres"].str.split('|')
+            explode_df = df.explode("genres")
+            genres_relativity = explode_df["genres"].value_counts(normalize=True) * 100
+            return genres_relativity
         
         
+        """
+        tags aggregation
+        """
+        
+        #average rate per tag
+        @staticmethod
+        def tag_avg_rate(data_dict:Dict[str,pd.DataFrame]):
+            combined_df = pd.merge(data_dict["ratings.csv"],data_dict["tags.csv"],on="movieId")
+            avg_per_tag = combined_df.groupby("tag")["rating"].mean()
+            return avg_per_tag
+        
+        #frequency of each tag
+        @staticmethod
+        def tag_freq(data_dict:Dict[str,pd.DataFrame]):
+            df = data_dict["tags.csv"]
+            tag_freq = df["tag"].value_counts()
+            return tag_freq
+        
+        #user useg per tag
+        @staticmethod
+        def user_tag_use(data_dict:Dict[str,pd.DataFrame]):
+            df = data_dict["tags.csv"]
+            user_tags = df["userId"].value_counts()
+            return user_tags
+        
+        #the best tag. the tag with the highest rate
+        @staticmethod
+        def best_tag(data_dict:Dict[str,pd.DataFrame]):
+            combined_data = pd.merge(data_dict["ratings.csv"],data_dict["tags.csv"],on="movieId")
+            mean_tag_rate = combined_data.groupby("tag")["rating"].mean()
+            highest = mean_tag_rate.idxmax()
+            return highest
+        
+        #get the most popular tag
+        @staticmethod
+        def most_popular_tag(data_dict:Dict[str,pd.DataFrame]):
+            df = data_dict["tags.csv"]
+            tags_count = df["tag"].value_counts()
+            most_popular = tags_count.idxmax()
+            return most_popular
+            
