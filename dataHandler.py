@@ -27,7 +27,7 @@ class ImportData:
     
 #class that handel the data cleaning
 #get a dictionary of dataFrame and clean the data
-#all the functions get the dataframe with the files from import_data
+#all the functions get dictionary of dataframes with the files from import_data
 class DataCleaning:
 
     #check for missing data
@@ -113,12 +113,29 @@ class DataCleaning:
             scalered_dict[file_name] = scaled_df
         
         return scalered_dict
-            
+    
+    
+    #convert all timestamp columns to datatime
+    @staticmethod
+    def to_time_date(data_dict:Dict[str,pd.DataFrame]):
+        for file_name, df in data_dict.items():
+            for col in df.columns:
+                if "timestamp" in col.lower() or "date" in col.lower():
+                    if pd.api.types.is_numeric_dtype(df[col]):
+                        df[col] = pd.to_datetime(df[col], unit='s',errors="coerce") #unit='s' treat the number as secound count
+                    elif pd.api.types.is_object_dtype(df[col]):
+                        df[col] = pd.to_datetime(df[col],errors="coerce")
+        
+        return data_dict
             
     
     #class that handel aggregation
     #create aggregation functions for tha data
     class aggregation:
+        
+        """
+        user aggregation
+        """
         
         #show for each user how much movies he rated
         @staticmethod
@@ -133,6 +150,51 @@ class DataCleaning:
             rating_df = data_dict["ratings.csv"]
             user_avg_rating = rating_df.groupby("userId")["rating"].mean()
             return user_avg_rating
+        
+        #get the standart deviation of each user rating
+        @staticmethod
+        def user_std(data_dict:Dict[str, pd.DataFrame]):
+            std_df = data_dict["ratings.csv"]
+            user_std_df = std_df.groupby("userId")["rating"].std()
+            return user_std_df
+        
+        #show the average frequency of a user in the system
+        @staticmethod
+        def user_avg_freq(data_dict:Dict[str, pd.DataFrame]):
+            date_time_df = DataCleaning.to_time_date(data_dict)
+            df = date_time_df["rating.csv"]
+            sorted_df = df.sort_values(by=["userId","timestamp"])
+            sorted_df["event_time_diff"] = sorted_df.groupby("userId")["timestamp"].diff()
+            user_avg_freq = sorted_df.groupby("userId")["event_time_diff"].mean()
+            return user_avg_freq
+            
+        
+        """
+        movie aggregation
+        """
+        
+        #show the mean rating for each movie
+        @staticmethod
+        def mean_movie_rate(data_dict: Dict[str,pd.DataFrame]):
+            rating_df = data_dict["ratings.csv"]
+            movie_rate = rating_df.groupby("movieId")["rating"].mean()
+            return movie_rate
+        
+        #overall number of rating per movie
+        @staticmethod
+        def rating_amount_per_movie(data_dict:Dict[str,pd.DataFrame]):
+            rating_df = data_dict["ratings.csv"]
+            rating_amount = rating_df["movieId"].value_counts()
+            return rating_amount
+        
+        
+        #find the standart deviation of each movie rating
+        @staticmethod
+        def movie_std(data_dict:Dict[str,pd.DataFrame]):
+            std_df = data_dict["ratings.csv"]
+            movie_std_df = std_df.groupby("movieId")["rating"].std()
+            return movie_std_df
+        
         
         
         
