@@ -298,3 +298,9 @@ class DataCleaning:
             most_popular = tags_count.idxmax()
             return most_popular
             
+            
+        
+        #create class for visualization
+        #contain matplotlib based functions
+        class visualization:
+            pass
