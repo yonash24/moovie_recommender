@@ -8,14 +8,16 @@ import os
 from sklearn.preprocessing import MinMaxScaler
 from kaggle.api.kaggle_api_extended import KaggleApi
 from sklearn.preprocessing import StandardScaler
-from dataHandler import visualization
-from dataHandler import aggregation
-from dataHandler import ImportData
+from visualization import visualization
+from dataHandler import aggregation ,ImportData, DataCleaning
+
 
 
 def main():
-    pass
-
+    data = ImportData.to_dataframe()
+    user_act = aggregation.user_activity(data)
+    visualization.user_activity(user_act)
+    
     
     
     

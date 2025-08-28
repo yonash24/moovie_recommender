@@ -69,3 +69,26 @@ class visualization:
             plt.xticks(rotation=45,ha="right")
             plt.show()
             
+        #show the top 20 active users
+        #get series from top_20_users from aggregation class
+        @staticmethod
+        def top_20_users(series: pd.Series):
+            series.plot(kind="bar")
+            plt.title("top 20 actives users")
+            plt.xlabel("suserId")
+            plt.ylabel("rating amount")
+            plt.show()
+            
+            
+        #show the activity of the users by time
+        #get series from user_activity in aggregation 
+        @staticmethod
+        def user_activity(series:pd.Series):
+            series.plot(kind="line")
+            plt.title("number of rating over time")
+            plt.xlabel("date")
+            plt.xticks(rotation=45,ha="right")
+            plt.ylabel("number of rating")
+            plt.show()
+            
+        

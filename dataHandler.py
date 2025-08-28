@@ -178,6 +178,16 @@ class aggregation:
             sorted_series = user_rate.sort_values(ascending=False)
             return sorted_series.head(20)
         
+        #get the activity of user by time
+        @staticmethod
+        def user_activity(data_dict:Dict[str,pd.DataFrame]):
+            dict = DataCleaning.to_time_date(data_dict)
+            df = dict["ratings.csv"]
+            df_index = df.set_index("timestamp")
+            monthly_activity = df_index["rating"].resample('M').size()
+            return monthly_activity
+        
+        
         """
         movie aggregation
         """
