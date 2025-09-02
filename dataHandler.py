@@ -35,7 +35,7 @@ class DataCleaning:
 
     #check for missing data
     @staticmethod
-    def data_check(dataset_dict:dict):
+    def handel_missing_values(dataset_dict:dict):
         cleaned_dataframes = {}
         for file, df in dataset_dict.items():
             new_data = df.dropna()
@@ -50,8 +50,6 @@ class DataCleaning:
             undup_data = df.drop_duplicates()
             new_data[file] = undup_data
         return new_data
-    
-    
     
     #fitting the data types
     @staticmethod
@@ -71,56 +69,12 @@ class DataCleaning:
             else:
                 new_data[file_name] = data
                 
-        return new_data
-    
-    
-    #normalize the data
-    @staticmethod
-    def data_normalaize(dataset_dict: dict):
-        scaler = MinMaxScaler()
-        
-        for file_name in dataset_dict:
-            df = dataset_dict[file_name]
-            for data in df.columns:
-                if pd.api.types.is_numeric_dtype(df[data]):
-                    df["normalize_"+data] = scaler.fit_transform(df[[data]])
-                    
-        return dataset_dict
-    
-    
-    #categorical the data
-    #go through the dataframes and seperate the text cols for each element 
-    #give 1 if the element within the col 0 otherwize
-    @staticmethod
-    def categorical_data(data_dict:dict):
-        new_data_dict = {}
-        for file_name, df in data_dict.items():
-            text_cols = df.select_dtypes(include=["object"]).columns
-            if not text_cols.empty:
-                dummies = pd.get_dummies(df[text_cols])
-                df = df.drop(columns=text_cols)
-                df = pd.concat([df,dummies],axis=1)
-            new_data_dict[file_name] = df
-            
-        return new_data_dict
-    
-    #scaling the data. standartization
-    @staticmethod
-    def standart_data(data_dict:dict):
-        scalered_dict = {}
-        for file_name, df in data_dict.items():
-            df_copy = df.copy()
-            scaler = StandardScaler()
-            scaled_data_arr = scaler.fit_transform(df_copy)
-            scaled_df = pd.DataFrame(scaled_data_arr, columns = df_copy.columns)
-            scalered_dict[file_name] = scaled_df
-        
-        return scalered_dict
-    
+        return new_data    
     
     #convert all timestamp columns to datatime
     @staticmethod
     def to_time_date(data_dict:Dict[str,pd.DataFrame]):
+    
         for file_name, df in data_dict.items():
             for col in df.columns:
                 if "timestamp" in col.lower() or "date" in col.lower():
@@ -130,6 +84,18 @@ class DataCleaning:
                         df[col] = pd.to_datetime(df[col],errors="coerce")
         
         return data_dict    
+    
+    
+    #create a pipeline to process the data
+    @staticmethod
+    def data_pipeline(data_dict:Dict[str,pd.DataFrame]):
+        data_dict = DataCleaning.data_fit(data_dict)
+        data_dict = DataCleaning.remove_dup(data_dict)
+        data_dict = DataCleaning.handel_missing_values(data_dict)
+        data_dict = DataCleaning.to_time_date(data_dict)
+        return data_dict
+    
+    
             
     
 #class that handel aggregation
@@ -325,3 +291,60 @@ class aggregation:
             most_popular = tags_count.idxmax()
             return most_popular
             
+        
+#create a class to preprocess the data
+class PreProcessData:
+            
+        #scaling the data. standartization
+        @staticmethod
+        def standart_data(data_dict:dict):
+            scalered_dict = {}
+            for file_name, df in data_dict.items():
+                df_copy = df.copy()
+                scaler = StandardScaler()
+                scaled_data_arr = scaler.fit_transform(df_copy)
+                scaled_df = pd.DataFrame(scaled_data_arr, columns = df_copy.columns)
+                scalered_dict[file_name] = scaled_df
+            
+            return scalered_dict
+        
+        #normalize the data
+        @staticmethod
+        def data_normalaize(dataset_dict: dict):
+            scaler = MinMaxScaler()
+            
+            for file_name in dataset_dict:
+                df = dataset_dict[file_name]
+                for data in df.columns:
+                    if pd.api.types.is_numeric_dtype(df[data]):
+                        df["normalize_"+data] = scaler.fit_transform(df[[data]])
+                        
+            return dataset_dict
+        
+        
+        
+        #merge the dataframes: movies.csv, ratings.csv into one table for the model
+        #and add column mean_movie_rate
+        #the function get clean data dict from pipeline in DataClean class and the mean rating for each movie from mean_movie_rate in aggregation
+        @staticmethod
+        def merge_dataFrames(clean_data:Dict[str,pd.DataFrame],mean_rating:pd.Series):
+            mean_merge = pd.merge(clean_data["ratings.csv"],mean_rating,on="movieId")
+            merge_df = pd.merge(clean_data["movies.csv"],mean_merge,on="movieId")
+            return merge_df
+        
+        #one hot encoded for genres seperate genres and
+        #give 1 if the element within the col 0 otherwize
+        @staticmethod
+        def one_hot_encoding_genres(data_dict:Dict[str,pd.DataFrame]):
+            df = data_dict["movies.csv"]
+            dummies_df = df["genres"].str.get_dummies(sep='|')
+            final_df = df.drop("genres",axis=1).join(dummies_df)
+            return final_df
+        
+        #add mean movie rating in a column to the dataframe
+        @staticmethod
+        def add_mean_movie_rate(data_dict: Dict[str,pd.DataFrame]):
+            ratings_df = data_dict["ratings.csv"]
+            mean_series = ratings_df.groupby('movieId')['rating'].mean().rename("mean_movie_rate") 
+            ratings_with_mean = pd.merge(ratings_df, mean_series, on='movieId', how='left')
+            return ratings_with_mean

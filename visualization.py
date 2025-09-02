@@ -268,7 +268,6 @@ class visualization:
         def plot_genre_treemap(movies_df: pd.DataFrame):
             genre_counts = movies_df['genres'].str.split('|').explode().value_counts().reset_index()
             genre_counts.columns = ['genre', 'count']
-            
-            fig = px.treemap(genre_counts, path=[px.Constant("All Genres"), 'genre'], values='count')
+            fig = nx.treemap(genre_counts, path=[nx.Constant("All Genres"), 'genre'], values='count')
             fig.update_layout(title_text='Genre Composition in the Movie Library', margin = dict(t=50, l=25, r=25, b=25))
             fig.show()
