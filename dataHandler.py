@@ -35,7 +35,7 @@ class DataCleaning:
 
     #check for missing data
     @staticmethod
-    def handel_missing_values(dataset_dict:dict):
+    def handle_missing_values(dataset_dict:dict):
         cleaned_dataframes = {}
         for file, df in dataset_dict.items():
             new_data = df.dropna()
@@ -91,7 +91,7 @@ class DataCleaning:
     def data_pipeline(data_dict:Dict[str,pd.DataFrame]):
         data_dict = DataCleaning.data_fit(data_dict)
         data_dict = DataCleaning.remove_dup(data_dict)
-        data_dict = DataCleaning.handel_missing_values(data_dict)
+        data_dict = DataCleaning.handle_missing_values(data_dict)
         data_dict = DataCleaning.to_time_date(data_dict)
         return data_dict
     
@@ -297,7 +297,7 @@ class PreProcessData:
             
         #scaling the data. standartization
         @staticmethod
-        def standart_data(data_dict:dict):
+        def standart_data(data_dict:Dict[str,pd.DataFrame]):
             scalered_dict = {}
             for file_name, df in data_dict.items():
                 df_copy = df.copy()
@@ -320,9 +320,7 @@ class PreProcessData:
                         df["normalize_"+data] = scaler.fit_transform(df[[data]])
                         
             return dataset_dict
-        
-        
-        
+              
         #merge the dataframes: movies.csv, ratings.csv into one table for the model
         #and add column mean_movie_rate
         #the function get clean data dict from pipeline in DataClean class and the mean rating for each movie from mean_movie_rate in aggregation
@@ -348,3 +346,9 @@ class PreProcessData:
             mean_series = ratings_df.groupby('movieId')['rating'].mean().rename("mean_movie_rate") 
             ratings_with_mean = pd.merge(ratings_df, mean_series, on='movieId', how='left')
             return ratings_with_mean
+        
+        #create final data frame to the model to learn from
+        #get clean data dictionary from pipeline in DataClean 
+        @staticmethod
+        def final_data(clean_data: Dict[str,pd.DataFrame]):
+            pass 
