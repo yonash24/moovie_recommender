@@ -1,11 +1,10 @@
-from typing import Dict
+from typing import Dict,Tuple
 import pandas as pd 
-import numpy as np
-import matplotlib.pyplot as plt
 import os
 from sklearn.preprocessing import MinMaxScaler
 from kaggle.api.kaggle_api_extended import KaggleApi
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
 
 #class that dealing with importing the datasets
 class ImportData:
@@ -352,3 +351,41 @@ class PreProcessData:
         @staticmethod
         def final_data(clean_data: Dict[str,pd.DataFrame]):
             pass 
+        
+        #create data frame for context based recommender
+        #it would contain ratings.csv, novies.csv, cols: mean_movie_rate, rating_count, year
+        def context_based_dataFrame(clean_data: Dict[str,pd.DataFrame]) -> pd.DataFrame:
+            movie_df = clean_data["movies.csv"].copy()
+            rating_df = clean_data["ratings.csv"].copy()
+            merge_df = pd.merge(movie_df,rating_df,on="movieId",how="left")
+            merge_df["year"] = merge_df["title"].str.extract(r'\((\d{4})\)')  
+            rate_count = merge_df.groupby("movieId")["rating"].transform("count")
+            merge_df["rating_count"] = rate_count
+            mean_rate = merge_df.groupby("movieId")["rating"].transform("mean")
+            merge_df["mean_movie_rate"] = mean_rate
+            return merge_df
+        
+        
+        #divid the data to featur and target
+        #get data frame from context_based_dataFrame
+        #return tuple of the features dataFrame and the target vector
+        @staticmethod
+        def select_final_features(df:pd.DataFrame):
+            target_vector = df["rating"]
+            featur_data = df.drop(columns=["rating","movieId","title"], errors="ignore")
+            return featur_data, target_vector
+        
+        
+        #get a tuple of featur data and target vector from select_final_features
+        #spliting the dasta into training set and testing set
+        @staticmethod
+        def split_data(data_tuple:Tuple[pd.DataFrame,pd.Series]):
+            x,y = data_tuple
+            x_train, x_test, y_train, y_test = train_test_split(x,y, test_size=0.2, random_state=50)
+            return x_train,x_test,y_train,y_test
+        
+        
+        #create a pipeline to the data pre processing for context bas model
+        @staticmethod
+        def context_based_pipeline_data(data_tuple:Tuple[pd.DataFrame, pd.DataFrame,pd.Series,pd.Series]):
+            pass
