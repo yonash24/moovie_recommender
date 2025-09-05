@@ -332,8 +332,7 @@ class PreProcessData:
         #one hot encoded for genres seperate genres and
         #give 1 if the element within the col 0 otherwize
         @staticmethod
-        def one_hot_encoding_genres(data_dict:Dict[str,pd.DataFrame]):
-            df = data_dict["movies.csv"]
+        def one_hot_encoding_genres(df : pd.DataFrame):
             dummies_df = df["genres"].str.get_dummies(sep='|')
             final_df = df.drop("genres",axis=1).join(dummies_df)
             return final_df
@@ -345,12 +344,7 @@ class PreProcessData:
             mean_series = ratings_df.groupby('movieId')['rating'].mean().rename("mean_movie_rate") 
             ratings_with_mean = pd.merge(ratings_df, mean_series, on='movieId', how='left')
             return ratings_with_mean
-        
-        #create final data frame to the model to learn from
-        #get clean data dictionary from pipeline in DataClean 
-        @staticmethod
-        def final_data(clean_data: Dict[str,pd.DataFrame]):
-            pass 
+    
         
         #create data frame for context based recommender
         #it would contain ratings.csv, novies.csv, cols: mean_movie_rate, rating_count, year
@@ -387,5 +381,9 @@ class PreProcessData:
         
         #create a pipeline to the data pre processing for context bas model
         @staticmethod
-        def context_based_pipeline_data(data_tuple:Tuple[pd.DataFrame, pd.DataFrame,pd.Series,pd.Series]):
-            pass
+        def context_based_pipeline_data(clean_data:Dict[str,pd.DataFrame]):
+            df = PreProcessData.context_based_dataFrame(clean_data)
+            one_hot_encoded = PreProcessData.one_hot_encoding_genres(df)
+            final_features = PreProcessData.select_final_features(one_hot_encoded)
+            data_split = PreProcessData.split_data(final_features)
+            return data_split
