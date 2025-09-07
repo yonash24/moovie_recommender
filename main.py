@@ -2,7 +2,7 @@
 #this is the heart of the programm here the programm gona start running
 from visualization import visualization
 from dataHandler import aggregation ,ImportData, DataCleaning, PreProcessData
-from MoovieRecommendations import TrainModels
+from MoovieRecommendations import TrainModels, HybridRecommend
 
 
 def main():
@@ -43,6 +43,8 @@ def main():
     TrainModels.evaluate_context_based_model(context_based_gradientBoosting_model, x_test, y_test)
     improve_gradientBoosting = TrainModels.gradient_boosting_hyperparameters_improvement(x_train,y_train)
     TrainModels.evaluate_context_based_model(improve_gradientBoosting,x_test,y_test)
+    
+    rec_movies = HybridRecommend.movies_to_recommend(6,)
     
 if __name__ == "__main__":
     main()

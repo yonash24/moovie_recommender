@@ -5,6 +5,7 @@ from sklearn.preprocessing import MinMaxScaler
 from kaggle.api.kaggle_api_extended import KaggleApi
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
+from MoovieRecommendations import HybridRecommend
 
 #class that dealing with importing the datasets
 class ImportData:
@@ -348,11 +349,12 @@ class PreProcessData:
         
         #create data frame for context based recommender
         #it would contain ratings.csv, novies.csv, cols: mean_movie_rate, rating_count, year
-        def context_based_dataFrame(clean_data: Dict[str,pd.DataFrame]) -> pd.DataFrame:
+        def context_based_data(clean_data: Dict[str,pd.DataFrame]) -> pd.DataFrame:
             movie_df = clean_data["movies.csv"].copy()
             rating_df = clean_data["ratings.csv"].copy()
             merge_df = pd.merge(movie_df,rating_df,on="movieId",how="left")
             merge_df["year"] = merge_df["title"].str.extract(r'\((\d{4})\)')  
+            merge_df["year"] = pd.to_numeric(merge_df["year"])
             rate_count = merge_df.groupby("movieId")["rating"].transform("count")
             merge_df["rating_count"] = rate_count
             mean_rate = merge_df.groupby("movieId")["rating"].transform("mean")
@@ -381,12 +383,11 @@ class PreProcessData:
         
         #create a pipeline to the data pre processing for context bas model
         @staticmethod
-        def context_based_pipeline_data(clean_data:Dict[str,pd.DataFrame]):
-            df = PreProcessData.context_based_dataFrame(clean_data)
+        def context_based_pipeline_data(df:pd.DataFrame):
             one_hot_encoded = PreProcessData.one_hot_encoding_genres(df)
             final_features = PreProcessData.select_final_features(one_hot_encoded)
             data_split = PreProcessData.split_data(final_features)
             return data_split
         
         
-        
+
