@@ -1,7 +1,6 @@
 # creating the main of the programm
 #this is the heart of the programm here the programm gona start running
-from visualization import visualization
-from dataHandler import aggregation ,ImportData, DataCleaning, PreProcessData
+from dataHandler import ImportData, DataCleaning, PreProcessData
 from MoovieRecommendations import TrainModels, HybridRecommend
 
 

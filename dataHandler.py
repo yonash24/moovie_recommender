@@ -5,7 +5,7 @@ from sklearn.preprocessing import MinMaxScaler
 from kaggle.api.kaggle_api_extended import KaggleApi
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
-from MoovieRecommendations import HybridRecommend
+
 
 #class that dealing with importing the datasets
 class ImportData:
@@ -390,4 +390,10 @@ class PreProcessData:
             return data_split
         
         
-
+        #prepare data for userr based model
+        @staticmethod
+        def user_based_data(clean_data:Dict[str,pd.DataFrame]):
+            rating_df = clean_data["ratings.csv"]
+            copy_df = rating_df.copy()
+            user_df = copy_df.drop("timestamp")
+            return user_df
